@@ -108,11 +108,11 @@ instrument.pattern <- "QE"
 
 ### Choose software pattern ###
 ## MSDIAL or Skyline
-software.pattern <- "MSDIAL"
-# software.pattern <- "Skyline"
+# software.pattern <- "MSDIAL"
+software.pattern <- "Skyline"
 
 ### Create file pattern ###
-file.pattern <- "MESOSCOPE"
+file.pattern <- "DINIMITE"
 
 ### Choose matching pattern ###
 # Reverse phase or HILIC
@@ -146,20 +146,20 @@ Comment or uncomment the block of variable names appropriate for your run.
 # skyline.reversephase <- HRM_TQS_ReversePhase_Skyline_Example
 
 ## HILIC: 
-# skyline.HILIC.pos <- HRM_TQS_HILICPos_Skyline_Example
+ skyline.HILIC.pos <- "data_raw/Ingalls_Lab_QE_ResultsSG.csv"
 # skyline.HILIC.neg <- HRM_TQS_HILICNeg_Skyline_Example
 
 ### MSDIAL ###
 ## HILIC:
-Area.positive <- MESOSCOPE_Area_HILICPos_MSDIAL_Example
-Mz.positive   <- MESOSCOPE_Mz_HILICPos_MSDIAL_Example
-RT.positive   <- MESOSCOPE_RT_HILICPos_MSDIAL_Example
-SN.positive   <- MESOSCOPE_SN_HILICPos_MSDIAL_Example
+#Area.positive <- MESOSCOPE_Area_HILICPos_MSDIAL_Example
+#Mz.positive   <- MESOSCOPE_Mz_HILICPos_MSDIAL_Example
+#RT.positive   <- MESOSCOPE_RT_HILICPos_MSDIAL_Example
+#SN.positive   <- MESOSCOPE_SN_HILICPos_MSDIAL_Example
 
-Area.negative <- MESOSCOPE_Area_HILICNeg_MSDIAL_Example
-Mz.negative   <- MESOSCOPE_Mz_HILICNeg_MSDIAL_Example
-RT.negative   <- MESOSCOPE_RT_HILICNeg_MSDIAL_Example
-SN.negative   <- MESOSCOPE_SN_HILICNeg_MSDIAL_Example
+#Area.negative <- MESOSCOPE_Area_HILICNeg_MSDIAL_Example
+#Mz.negative   <- MESOSCOPE_Mz_HILICNeg_MSDIAL_Example
+#RT.negative   <- MESOSCOPE_RT_HILICNeg_MSDIAL_Example
+#SN.negative   <- MESOSCOPE_SN_HILICNeg_MSDIAL_Example
 
 print(paste(file.pattern, instrument.pattern, software.pattern, "variables assigned."))
 ```
