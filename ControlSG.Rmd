@@ -13,15 +13,14 @@ Section III: Applying Best-Matched Internal Standard (B-MIS).
 Section IV: Quantifying peak area to umol/vial when possible.
 
 
-
 Load your libraries
-
 ```{r setup, include=TRUE}
 library(tidyverse)
 library(janitor)
 ```
 
-Section 1:
+# Section I: Import and cleaning/rearranging of data.
+
 
 Import the file that came directly from Skyline. Assign it a variable name and save it to the directory.Rearrange the dataset into a file you like: Compound name, Filename, Area.
 ```{r setup, include=TRUE}
@@ -37,13 +36,17 @@ HILICpos <- read.csv(filepath, check.names = TRUE) %>%
   clean_names() %>%
   mutate(filename = replicate_name,
          compound_name = precursor_ion_name,
-         area = as.numeric(area)) %>%
-  select("compound_name", "filename", "area", "retention_time") 
+         area = as.numeric(area),
+         retention_time = as.numeric(retention_time),
+         height = as.numeric(height),
+         background = as.numeric(background)) %>%
+  select("compound_name", "filename", "area", "retention_time", "height", "background") 
 
 #Below this can check for multiple entries per compoundname and filename
 #  count(compound_name, filename)
 ```
 Import Ingalls Standards List, clean and arrange with columns you desire. Here the compound name and the retention times are important for me.
+
 ```{r setup, include=TRUE}
 stds_list <- read.csv("data_raw/Ingalls_Lab_Standards.csv", check.names = TRUE) %>%
   clean_names() %>%
@@ -51,27 +54,47 @@ stds_list <- read.csv("data_raw/Ingalls_Lab_Standards.csv", check.names = TRUE) 
 ```
 
 
-Section 2:
+# Section II: Quality control using user-defined parameters.
 
 Setting the parameters desired. 
 ```{r setup, include=TRUE}
-# QE + TQS QC parameters
+# QE QC parameters
 area.min   <- 1000 # HILIC - 1000
-RT.flex    <- 0.4 # HILIC +/- 0.4 min
+rt.flex    <- 3 # HILIC +/- 0.4 min
 blk.thresh <- 0.3 # HILIC +/- 0.3
-SN.min     <- 4 # HILIC - 4
-
-# Additional QC parameters for Skyline TQS 
+sn.min     <- 4 # HILIC - 4
 height.min <- 1000
 ```
 
 Joining dataframes in order to create dataframe that can change set up the parameters. 
 ```{r}
 wip_QC_HILICpos <- inner_join(HILICpos, stds_list, by = "compound_name") %>%
-  mutate(qc_area = area> area.min,
+  mutate(retention_time = as.numeric(retention_time),
+         std_retention_time = as.numeric(rt_minute),
+         qc_area = area> area.min,
          qc_abs_rt = abs(rt_minute - retention_time),
+         qc_rt = qc_abs_rt > rt.flex,
+         sn = (area / background),
+         qc_sn = sn > sn.min,
          qc_height = height > height.min)
 ```
 
+Creating Blank Dataframe
+```{r}
+ blank_table <- HILICpos %>%
+  filter(str_detect(filename, "Blk")) %>%
+  group_by(compound_name) %>%
+  mutate(blank_max = max(area)) %>%
+  select(compound_name, blank_max) %>%
+  unique()
+```
+
+Joining Blank Dataframe and wip_QC_HILICpos.
+```{r}
+QC_HILICpos <- inner_join(wip_QC_HILICpos, blank_table, by = "compound_name") %>%
+  mutate(qc_blk_thresh = area > blank_max) %>%
+  select("compound_name", "filename", "area", "qc_area", "retention_time","qc_rt", "height","qc_height", "sn", "qc_sn", "qc_blk_thresh", "background")
+  
+```
 
 
