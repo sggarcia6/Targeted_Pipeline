@@ -17,21 +17,29 @@ update_compound_names <- function(df) {
     select(Precursor.Ion.Name = Compound_Name, everything(), -Compound_Name_Original)
 }
 
+
 # Identify positive and negative HILIC runs
 if (runtype.pattern == "pos|neg") {
   
+  # Convert skyline.HILIC.pos to data frame and apply mutate
+  skyline.HILIC.pos <- as.data.frame(skyline.HILIC.pos)  
+  skyline.HILIC.pos <- skyline.HILIC.pos %>% mutate(Column = "HILICpos")
+  
+  # Convert skyline.HILIC.neg to data frame and apply mutate
+#  skyline.HILIC.neg <- as.data.frame(skyline.HILIC.neg)  
+#  skyline.HILIC.neg <- skyline.HILIC.neg %>% mutate(Column = "HILICneg")
+  
   skyline.HILIC.pos <- skyline.HILIC.pos %>%
     mutate(Column = "HILICpos")
-  skyline.HILIC.neg <- skyline.HILIC.neg %>%
-    mutate(Column = "HILICneg")
+#  skyline.HILIC.neg <- skyline.HILIC.neg %>%
+#    mutate(Column = "HILICneg")
   
-  combined.skyline <- skyline.HILIC.pos %>%
-    rbind(skyline.HILIC.neg) %>%
-    select(Replicate.Name, Precursor.Ion.Name, Retention.Time, Area, Background, Height, Mass.Error.PPM, Column) %>%
-    mutate_all(replace_nonvalues) 
+   combined.skyline <- skyline.HILIC.pos %>%
+     select(Replicate.Name, Precursor.Ion.Name, Retention.Time, Area, Background, Height, Mass.Error.PPM, Column) %>%
+     mutate_all(replace_nonvalues) 
   
   # Change variable classes
-  skyline.classes.changed <- ChangeClasses(combined.skyline, start.column = 3, end.column = 7) 
+  skyline.classes.changed <- ChangeClasses(skyline.HILIC.pos, start.column = 3, end.column = 7) 
   
   # Fix old compound names
   skyline.names.updated <- update_compound_names(skyline.classes.changed)

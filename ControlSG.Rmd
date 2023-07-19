@@ -1,0 +1,77 @@
+---
+title: "SGControl"
+output: html_document
+date: "2023-07-18"
+---
+SG Personal Pipeline for Dinimite Cruise June 2022 Metabolite Data.
+
+Goals:
+
+Section I: Import and cleaning/rearranging of data.
+Section II: Quality control using user-defined parameters. 
+Section III: Applying Best-Matched Internal Standard (B-MIS).
+Section IV: Quantifying peak area to umol/vial when possible.
+
+
+
+Load your libraries
+
+```{r setup, include=TRUE}
+library(tidyverse)
+library(janitor)
+```
+
+Section 1:
+
+Import the file that came directly from Skyline. Assign it a variable name and save it to the directory.Rearrange the dataset into a file you like: Compound name, Filename, Area.
+```{r setup, include=TRUE}
+#Creating the filepath for file
+filepath <- "data_raw/Dino22HILIPos.csv"
+
+#Having an original file of the file received directly from Skyline
+ogHILICpos <- read.csv(filepath, check.names = TRUE) %>%
+  clean_names()
+
+#Reading the file into the directory and clearing the columns you don't want
+HILICpos <- read.csv(filepath, check.names = TRUE) %>%
+  clean_names() %>%
+  mutate(filename = replicate_name,
+         compound_name = precursor_ion_name,
+         area = as.numeric(area)) %>%
+  select("compound_name", "filename", "area", "retention_time") 
+
+#Below this can check for multiple entries per compoundname and filename
+#  count(compound_name, filename)
+```
+Import Ingalls Standards List, clean and arrange with columns you desire. Here the compound name and the retention times are important for me.
+```{r setup, include=TRUE}
+stds_list <- read.csv("data_raw/Ingalls_Lab_Standards.csv", check.names = TRUE) %>%
+  clean_names() %>%
+  select("compound_name", "rt_minute")
+```
+
+
+Section 2:
+
+Setting the parameters desired. 
+```{r setup, include=TRUE}
+# QE + TQS QC parameters
+area.min   <- 1000 # HILIC - 1000
+RT.flex    <- 0.4 # HILIC +/- 0.4 min
+blk.thresh <- 0.3 # HILIC +/- 0.3
+SN.min     <- 4 # HILIC - 4
+
+# Additional QC parameters for Skyline TQS 
+height.min <- 1000
+```
+
+Joining dataframes in order to create dataframe that can change set up the parameters. 
+```{r}
+wip_QC_HILICpos <- inner_join(HILICpos, stds_list, by = "compound_name") %>%
+  mutate(qc_area = area> area.min,
+         qc_abs_rt = abs(rt_minute - retention_time),
+         qc_height = height > height.min)
+```
+
+
+

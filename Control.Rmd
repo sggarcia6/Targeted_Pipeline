@@ -72,14 +72,9 @@ print("Subdirectories emptied.")
 
 ----------------------------------------------------------------------------------------------------------------------------
 Section I: 
-For MSDIAL, import all MSDIAL files that have been split by Area, Mass/charge (Mz), Retention Time (RT), and Signal to Noise (SN). 
+
 For Skyline, import your single Skyline file which should be in long format. Once files are imported and cleaned, ensure that the compound names are updated with the latest Ingalls Standards sheet.
 
-Steps for MSDIAL data:
-Set header, filter unknowns.
-Change variable classes from character/factor to numeric, according to column.
-Rearrange the data frames and combine to a single frame in long format.
-Standardize dataset by removing "Ingalls_" prefixes from compound names, and removing the syntactically correct "X" from the Replicates column.
 
 For Skyline data:
 Ensure all columns are the appropriate class (numeric, character, etc.)
@@ -102,21 +97,16 @@ The runtype.pattern refers to whether the data is HILIC (pos/neg) or Reverse Pha
 
 ```{r Pattern matching, include = TRUE}
 ### Choose instrument pattern ###
-## QE or TQS
 instrument.pattern <- "QE"
-# instrument.pattern <- "TQS"
+
 
 ### Choose software pattern ###
-## MSDIAL or Skyline
-# software.pattern <- "MSDIAL"
 software.pattern <- "Skyline"
 
 ### Create file pattern ###
 file.pattern <- "DINIMITE"
 
 ### Choose matching pattern ###
-# Reverse phase or HILIC
-# runtype.pattern <- "reversephase"
 runtype.pattern <- "pos|neg"
 
 print(paste("Your software type is:", software.pattern))
@@ -146,7 +136,7 @@ Comment or uncomment the block of variable names appropriate for your run.
 # skyline.reversephase <- HRM_TQS_ReversePhase_Skyline_Example
 
 ## HILIC: 
- skyline.HILIC.pos <- "data_raw/Ingalls_Lab_QE_ResultsSG.csv"
+ skyline.HILIC.pos <- "data_raw/Dino22HILICPos.csv"
 # skyline.HILIC.neg <- HRM_TQS_HILICNeg_Skyline_Example
 
 ### MSDIAL ###
@@ -221,7 +211,7 @@ SN.min     <- 4 # HILIC - 4, Reverse phase - 4
 
 # Additional QC parameters for Skyline TQS 
 height.min <- 1000
-height.max <- 1.0e8
+height.max <- 1.0e8 #(might skip)
 
 # Additional QC parameter for Ion Ratio TQS 
 IR.flex  <- 0.3
