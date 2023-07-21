@@ -97,4 +97,15 @@ QC_HILICpos <- inner_join(wip_QC_HILICpos, blank_table, by = "compound_name") %>
   
 ```
 
+# Section III: Applying Best-Matched Internal Standard (B-MIS)
+
+
+Importing the Internal Standards
+```{r}
+# Internal Standards
+Internal.Standards <- read.csv("https://raw.githubusercontent.com/IngallsLabUW/Ingalls_Standards/master/Ingalls_Lab_Standards.csv", header = TRUE) %>%
+  filter(Column == Column) %>%
+  filter(Compound_Type == "Internal Standard")
+Internal.Standards$Compound_Name <- TrimWhitespace(Internal.Standards$Compound_Name)
+```
 

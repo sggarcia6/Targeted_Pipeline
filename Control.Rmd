@@ -300,10 +300,10 @@ Comment out appropriate variable blocks according to HILIC or Reverse phase data
 ```{r Reverse phase HILIC assignment, include = TRUE}
 
 # MSDIAL
-software.pattern <- "MSDIAL"
+#software.pattern <- "MSDIAL"
 
 # Skyline
-#software.pattern <- "Skyline"
+software.pattern <- "Skyline"
 
 # Cyano Skyline
 # Column.Type = "RP"
@@ -316,14 +316,14 @@ software.pattern <- "MSDIAL"
 # QC.pattern = "QC_Output_CYANO"
 
 # HILIC Skyline
-# Column.Type = "HILIC"
-# standards.pattern = "Ingalls"
-# QC.pattern = "QC_Output_HILIC"
+ Column.Type = "HILIC"
+ standards.pattern = "Ingalls"
+ QC.pattern = "QC_Output_HILIC"
 
 # HILIC MSDIAL
-Column.Type = "HILIC"
-standards.pattern = "Ingalls"
-QC.pattern = "QC_Output_MESOSCOPE"
+#Column.Type = "HILIC"
+#standards.pattern = "Ingalls"
+#QC.pattern = "QC_Output_MESOSCOPE"
 
 print(paste(file.pattern, "column type, software pattern, standards pattern, and QC pattern assigned."))
 ```
