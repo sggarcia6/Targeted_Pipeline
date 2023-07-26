@@ -99,13 +99,62 @@ QC_HILICpos <- inner_join(wip_QC_HILICpos, blank_table, by = "compound_name") %>
 
 # Section III: Applying Best-Matched Internal Standard (B-MIS)
 
-
-Importing the Internal Standards
+1. Make dataframe into wide format
 ```{r}
-# Internal Standards
-Internal.Standards <- read.csv("https://raw.githubusercontent.com/IngallsLabUW/Ingalls_Standards/master/Ingalls_Lab_Standards.csv", header = TRUE) %>%
-  filter(Column == Column) %>%
-  filter(Compound_Type == "Internal Standard")
-Internal.Standards$Compound_Name <- TrimWhitespace(Internal.Standards$Compound_Name)
+BMIS_df <- ogHILICpos %>%
+  clean_names() %>%
+  mutate(filename = replicate_name,
+         compound_name = precursor_ion_name) %>%
+  select( "filename", "compound_name", "area")
+
+# making it into a wide format
+BMIS_df_wide <- BMIS_df %>%
+  pivot_wider(
+    id_cols = c("filename"),
+    names_from = "compound_name",
+    values_from = "area")
+```
+
+2.Create a new dataframe that only contains the Internal Standards
+```{r}
+# Here I am listing all the internal standards I have in this sheet
+IS <- c("Adenine, 15N2","Arsenobetaine, 13C2", "Cytosine, 13C2, 15N3", "DL-Alanine, 2H3", "DL-Histidine, 15N", "DL-Proline, 2H7", "DL-Valine, 2H8","Glycine betaine, 13C5, 15N", "Guanine, 13C, 15N2", "Homarine, 2H3", "L-Isoleucine, 15N", "L-Methionine, 2H3", "Trimethylamine N-oxide, 2H9","L-Arginine, 13C6, 15N4")
+
+IS_BMIS_df <- BMIS_df_wide %>%
+  select(filename, all_of(IS))
+
+# Now you will filter for only the "Poo"
+
+# setting the name of the string I am interested
+poostring <- "221006_Poo_TruePooRC_"
+
+# Filter rows for filenames containing the specified string
+IS_poo_BMIS_df <- IS_BMIS_df %>%
+  filter(str_detect(filename, poostring)) %>%
+  slice(-(1:3)) %>%
+
+```
+
+3. Normalize BMIS areas and gather CV for compound. 
+```{r}
+# Creating a datafram that only contains the poo with all the compounds and no standards
+poo_cmpds_BMIS_df <- BMIS_df_wide %>%
+  filter(str_detect(filename, poostring)) %>%
+  slice(-(1:3)) %>%
+  select(-all_of(IS))
+
+# Finding Normalizes Peak Areas
+
+BMIS_df_wide$Adenine <- as.numeric(BMIS_df_wide$Adenine)
+BMIS_df_wide$`Adenine, 15N2` <- as.numeric(BMIS_df_wide$`Adenine, 15N2`)
+
+poo_BMIS_df <- BMIS_df_wide %>%
+  filter(str_detect(filename, poostring)) %>%
+  slice(-(1:3)) %>%
+  mutate(BMIS_adenine = (Adenine / `Adenine, 15N2`))
+
+
+
+
 ```
 
