@@ -115,7 +115,7 @@ BMIS_df_wide <- BMIS_df %>%
     values_from = "area")
 ```
 
-2.Create a new dataframe that only contains the Internal Standards
+2.Create a new dataframe that only contains the Internal Standards and the Compounds. So two different dataframes.
 ```{r}
 # Here I am listing all the internal standards I have in this sheet
 IS <- c("Adenine, 15N2","Arsenobetaine, 13C2", "Cytosine, 13C2, 15N3", "DL-Alanine, 2H3", "DL-Histidine, 15N", "DL-Proline, 2H7", "DL-Valine, 2H8","Glycine betaine, 13C5, 15N", "Guanine, 13C, 15N2", "Homarine, 2H3", "L-Isoleucine, 15N", "L-Methionine, 2H3", "Trimethylamine N-oxide, 2H9","L-Arginine, 13C6, 15N4")
@@ -131,20 +131,62 @@ poostring <- "221006_Poo_TruePooRC_"
 # Filter rows for filenames containing the specified string
 IS_poo_BMIS_df <- IS_BMIS_df %>%
   filter(str_detect(filename, poostring)) %>%
-  slice(-(1:3)) %>%
-
-```
-
-3. Normalize BMIS areas and gather CV for compound. 
-```{r}
+  slice(-(1:3)) 
+  
 # Creating a datafram that only contains the poo with all the compounds and no standards
 poo_cmpds_BMIS_df <- BMIS_df_wide %>%
   filter(str_detect(filename, poostring)) %>%
   slice(-(1:3)) %>%
   select(-all_of(IS))
+```
 
-# Finding Normalizes Peak Areas
+3. Normalize BMIS areas and gather CV for compound. 
+```{r}
+# Create an empty list to store results for each compound
+results_list <- list()
 
+# Loop through each compound
+for (compound_name in unique(poo_cmpds_BMIS_df$compound_name)) {
+  # Extract the compound area from BMIS_df_wide
+  compound_area <- poo_cmpds_BMIS_df %>%
+    filter(compound_name == compound_name) %>%
+    select(-filename, -compound_name) %>%
+    t() %>%
+    as.numeric()
+  
+  # Loop through each internal standard and calculate the division
+  for (internal_standard in IS) {
+    # Extract the internal standard area from BMIS_df_wide
+    internal_standard_area <- BMIS_df_wide %>%
+      filter(compound_name == internal_standard) %>%
+      select(-filename, -compound_name) %>%
+      t() %>%
+      as.numeric()
+    
+    # Perform the division
+    result <- compound_area / internal_standard_area
+    
+    # Create a new column with the result
+    BMIS_df_wide <- BMIS_df_wide %>%
+      mutate(!!paste0("BMIS_", compound_name) := result)
+  }
+  
+  # Store the result for this compound in the results_list
+  results_list[[compound_name]] <- BMIS_df_wide %>%
+    select(filename, !!paste0("BMIS_", compound_name))
+  
+  # Remove the intermediate columns used for calculation
+  BMIS_df_wide <- BMIS_df_wide %>%
+    select(-matches("^BMIS_"))
+}
+
+# Create the final BMIS dataframe
+BMIS_df <- bind_cols(results_list)
+
+# View the final BMIS dataframe
+print(BMIS_df)
+
+  
 BMIS_df_wide$Adenine <- as.numeric(BMIS_df_wide$Adenine)
 BMIS_df_wide$`Adenine, 15N2` <- as.numeric(BMIS_df_wide$`Adenine, 15N2`)
 
@@ -152,8 +194,6 @@ poo_BMIS_df <- BMIS_df_wide %>%
   filter(str_detect(filename, poostring)) %>%
   slice(-(1:3)) %>%
   mutate(BMIS_adenine = (Adenine / `Adenine, 15N2`))
-
-
 
 
 ```
