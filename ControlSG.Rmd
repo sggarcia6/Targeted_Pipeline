@@ -17,6 +17,8 @@ Load your libraries
 ```{r setup, include=TRUE}
 library(tidyverse)
 library(janitor)
+library(dplyr)
+library(tidyr)
 ```
 
 # Section I: Import and cleaning/rearranging of data.
@@ -140,61 +142,48 @@ poo_cmpds_BMIS_df <- BMIS_df_wide %>%
   select(-all_of(IS))
 ```
 
-3. Normalize BMIS areas and gather CV for compound. 
+3. Create the Normalize BMIS areas.
 ```{r}
-# Create an empty list to store results for each compound
-results_list <- list()
+# Sample vector containing compound names
+compounds <- colnames(poo_cmpds_BMIS_df)
+compounds <- compounds[-1]
 
-# Loop through each compound
-for (compound_name in unique(poo_cmpds_BMIS_df$compound_name)) {
-  # Extract the compound area from BMIS_df_wide
-  compound_area <- poo_cmpds_BMIS_df %>%
-    filter(compound_name == compound_name) %>%
-    select(-filename, -compound_name) %>%
-    t() %>%
-    as.numeric()
-  
-  # Loop through each internal standard and calculate the division
-  for (internal_standard in IS) {
-    # Extract the internal standard area from BMIS_df_wide
-    internal_standard_area <- BMIS_df_wide %>%
-      filter(compound_name == internal_standard) %>%
-      select(-filename, -compound_name) %>%
-      t() %>%
-      as.numeric()
-    
-    # Perform the division
-    result <- compound_area / internal_standard_area
-    
-    # Create a new column with the result
-    BMIS_df_wide <- BMIS_df_wide %>%
-      mutate(!!paste0("BMIS_", compound_name) := result)
+# Internal standard name
+internal_standards <- colnames(IS_BMIS_df)
+internal_standards <- internal_standards[-1]
+
+# Filter rows for filenames containing the specified string
+BMIS_poo_df <- BMIS_df_wide %>%
+  filter(str_detect(filename, poostring)) %>%
+  slice(-(1:3)) 
+
+
+# Loop through each compound and perform the division by the corresponding internal standard
+for (compound in compounds) {
+  BMIS_poo_df[[compound]] <- as.numeric(BMIS_poo_df[[compound]])
+  for (internal_standard in internal_standards) {
+    BMIS_poo_df[[internal_standard]] <- as.numeric(BMIS_poo_df[[internal_standard]])
+    BMIS_poo_df <- BMIS_poo_df %>%
+      mutate(!!paste0("BMIS_", compound) := .data[[compound]] / .data[[internal_standard]])
   }
-  
-  # Store the result for this compound in the results_list
-  results_list[[compound_name]] <- BMIS_df_wide %>%
-    select(filename, !!paste0("BMIS_", compound_name))
-  
-  # Remove the intermediate columns used for calculation
-  BMIS_df_wide <- BMIS_df_wide %>%
-    select(-matches("^BMIS_"))
 }
 
-# Create the final BMIS dataframe
-BMIS_df <- bind_cols(results_list)
-
-# View the final BMIS dataframe
-print(BMIS_df)
-
-  
-BMIS_df_wide$Adenine <- as.numeric(BMIS_df_wide$Adenine)
-BMIS_df_wide$`Adenine, 15N2` <- as.numeric(BMIS_df_wide$`Adenine, 15N2`)
-
-poo_BMIS_df <- BMIS_df_wide %>%
-  filter(str_detect(filename, poostring)) %>%
-  slice(-(1:3)) %>%
-  mutate(BMIS_adenine = (Adenine / `Adenine, 15N2`))
-
+# Create a new data frame containing only the BMIS_compounds
+BMISed_areas <- BMIS_poo_df %>%
+  select(filename, starts_with("BMIS_"))
 
 ```
+
+4. Create CV for the BMIS Areas.
+```{r}
+# Calculate the coefficient of variation (CV) for each column in the BMISed_areas data frame
+cv_values <- apply(BMISed_areas[, -1], 2, function(x) {
+  cv <- sd(x) / mean(x, na.rm = TRUE)
+  return(cv)
+})
+
+# Combine the compound names and their respective CV values into a data frame
+cv_results <- data.frame(compound_name = names(cv_values), CV = cv_values)
+```
+
 
