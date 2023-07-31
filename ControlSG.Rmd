@@ -14,10 +14,9 @@ Section IV: Quantifying peak area to umol/vial when possible.
 
 
 Load your libraries
-```{r setup, include=TRUE}
+```{r setup, include=TRUE}c
 library(tidyverse)
 library(janitor)
-library(dplyr)
 library(tidyr)
 ```
 
